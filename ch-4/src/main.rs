@@ -21,7 +21,6 @@ fn main() {
 
     for line in &lines {
         if line == "" {
-            println!("{:?}", valid_keys);
             if valid_keys.len() == required_keys.len() {
                 num_valid += 1;
             }
@@ -33,15 +32,87 @@ fn main() {
         
         for pair in pairs {
             let mapping: Vec<&str> = pair.split(":").collect();
-            if mapping[0] == "cid" {
-                continue;
-            }
+            
+            let is_valid: bool = match mapping[0] {
+                "byr" => {
+                    let birth_year: i32 = mapping[1].parse().unwrap_or(0);
+                    birth_year >= 1920 && birth_year <= 2002 
+                },
+                "iyr" => {
+                    let issue_year: i32 = mapping[1].parse().unwrap_or(0);
+                    issue_year >= 2010 && issue_year <= 2020
 
-            valid_keys.push(mapping[0].clone());
+                },
+                "eyr" => {
+                    let expiration_year: i32 = mapping[1].parse().unwrap_or(0);
+                    expiration_year >= 2020 && expiration_year <= 2030
+                },
+                "hgt" => {
+                    let height = mapping[1];
+
+                    if height.contains("cm") {
+                        let height = height.replace("cm", "");
+                        let height: i32 = height.parse().unwrap_or(0);
+
+                        height >= 150 && height <= 193
+                    } else if height.contains("in") {
+                        let height = height.replace("in", "");
+                        let height: i32 = height.parse().unwrap_or(0);
+
+                        height >= 59 && height <= 76
+                    } else {
+                        false
+                    }
+                },
+                "hcl" => {
+                    let hair_color = mapping[1];
+                    let hex_chars = "abcdef0123456789";
+                    let mut is_valid_hex = true;
+
+                    if hair_color.chars().nth(0).unwrap() == '#' && hair_color.len() == 7{
+                        for c in hair_color[1..].chars() {
+                            if !hex_chars.contains(c) {
+                                is_valid_hex = false;
+                                break;
+                            }
+                        }
+
+                        is_valid_hex
+                    } else {
+                        false
+                    }
+                },
+                "ecl" => {
+                    let allowed_colors = ["amb", "blu", "brn", "gry", "grn", "hzl", "oth"];
+                    let eye_color = mapping[1];
+
+                    allowed_colors.contains(&eye_color)
+                },
+                "pid" => {
+                    let passport_id = mapping[1];
+                    let mut is_id_valid = true;
+
+                    if passport_id.len() == 9 {
+                        let passport_id: i64 = passport_id.parse().unwrap_or(-1);
+                        if passport_id == -1 {
+                            is_id_valid = false;
+                        }
+                    } else {
+                        is_id_valid = false;
+                    }
+
+                    is_id_valid
+                },
+                "cid" => false,
+                _ => false
+            };
+
+            if is_valid {
+                valid_keys.push(mapping[0].clone());
+            }
         }
     }
 
-    println!("{:?}", valid_keys);
     if valid_keys.len() == required_keys.len() {
         num_valid += 1;
     }
